@@ -48,15 +48,16 @@ def max_pool_2x2(x):
 
 def main(_):
     # load data
-    meta, train_data, test_data = input_data.load_data(FLAGS.data_dir, flatten=False)
-    print('data loaded')
-    print('train images: %s. test images: %s' % (train_data.images.shape[0], test_data.images.shape[0]))
-
-    LABEL_SIZE = meta['label_size']
-    IMAGE_HEIGHT = meta['height']
-    IMAGE_WIDTH = meta['width']
-    IMAGE_SIZE = IMAGE_WIDTH * IMAGE_HEIGHT
-    print('label_size: %s, image_size: %s' % (LABEL_SIZE, IMAGE_SIZE))
+    # meta, train_data, test_data = input_data.load_data(FLAGS.data_dir, flatten=False)
+    image_input = input_data._read_image(FLAGS.data_dir, flatten=False, 40, 60)
+    # print('data loaded')
+    # print('train images: %s. test images: %s' % (train_data.images.shape[0], test_data.images.shape[0]))
+    #
+    # LABEL_SIZE = meta['label_size']
+    # IMAGE_HEIGHT = meta['height']
+    # IMAGE_WIDTH = meta['width']
+    # IMAGE_SIZE = IMAGE_WIDTH * IMAGE_HEIGHT
+    # print('label_size: %s, image_size: %s' % (LABEL_SIZE, IMAGE_SIZE))
 
     # variable in the graph for input data
     with tf.name_scope('input'):
@@ -125,44 +126,17 @@ def main(_):
         variable_summaries(accuracy)
 
     with tf.Session() as sess:
-
-        merged = tf.summary.merge_all()
-        train_writer = tf.summary.FileWriter(LOG_DIR + '/train', sess.graph)
-        test_writer = tf.summary.FileWriter(LOG_DIR + '/test', sess.graph)
+        saver.restore(sess, "/tmp/model.ckpt")
 
         tf.global_variables_initializer().run()
 
-        # Train
-        for i in range(MAX_STEPS):
-            batch_xs, batch_ys = train_data.next_batch(BATCH_SIZE)
+        predict_result = sess.run(predict, feed_dict={x: image_input, keep_prob: 1.0})
 
-            step_summary, _ = sess.run([merged, train_step], feed_dict={x: batch_xs, y_: batch_ys, keep_prob: 1.0})
-            train_writer.add_summary(step_summary, i)
-
-            if i % 100 == 0:
-                # Test trained model
-                valid_summary, train_accuracy = sess.run([merged, accuracy], feed_dict={x: batch_xs, y_: batch_ys, keep_prob: 1.0})
-                train_writer.add_summary(valid_summary, i)
-
-                # final check after looping
-                test_x, test_y = test_data.next_batch(2000)
-                test_summary, test_accuracy = sess.run([merged, accuracy], feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})
-                test_writer.add_summary(test_summary, i)
-
-                print('step %s, training accuracy = %.2f%%, testing accuracy = %.2f%%' % (i, train_accuracy * 100, test_accuracy * 100))
-
-        train_writer.close()
-        test_writer.close()
-
-        # final check after looping
-        test_x, test_y = test_data.next_batch(2000)
-        test_accuracy = accuracy.eval(feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})
-        print('testing accuracy = %.2f%%' % (test_accuracy * 100, ))
-
+        print(predict_result)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='images/char-1-epoch-2000/',
-                        help='Directory for storing input data')
+    parser.add_argument('--img', type=str, default='input.png',
+                        help='image to predict')
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

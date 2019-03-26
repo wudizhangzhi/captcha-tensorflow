@@ -46,7 +46,7 @@ def _read_image(filename, flatten, width, height, **extra_meta):
 
 def _read_label(filename, label_choices, **extra_meta):
     basename = os.path.basename(filename)
-    labels = basename.split('_')[0]
+    labels = basename.split('_')[0].lower()
 
     data = []
 
