@@ -49,7 +49,12 @@ def max_pool_2x2(x):
 def main(_):
     # load data
     # meta, train_data, test_data = input_data.load_data(FLAGS.data_dir, flatten=False)
+<<<<<<< HEAD
     image_input = input_data._read_image(FLAGS.data_dir, flatten=False, 40, 60)
+=======
+    image_input = input_data._read_image(FLAGS.img, flatten=False, width=40, height=60)
+    image_input = [image_input]
+>>>>>>> debug
     # print('data loaded')
     # print('train images: %s. test images: %s' % (train_data.images.shape[0], test_data.images.shape[0]))
     #
@@ -58,6 +63,13 @@ def main(_):
     # IMAGE_WIDTH = meta['width']
     # IMAGE_SIZE = IMAGE_WIDTH * IMAGE_HEIGHT
     # print('label_size: %s, image_size: %s' % (LABEL_SIZE, IMAGE_SIZE))
+<<<<<<< HEAD
+=======
+    IMAGE_HEIGHT = 60
+    IMAGE_WIDTH = 40
+    IMAGE_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH 
+    LABEL_SIZE = 36
+>>>>>>> debug
 
     # variable in the graph for input data
     with tf.name_scope('input'):
@@ -125,14 +137,17 @@ def main(_):
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         variable_summaries(accuracy)
 
+    saver = tf.train.Saver()
     with tf.Session() as sess:
-        saver.restore(sess, "/tmp/model.ckpt")
+        saver.restore(sess, "model/cnn-1.ckpt")
 
         tf.global_variables_initializer().run()
 
         predict_result = sess.run(predict, feed_dict={x: image_input, keep_prob: 1.0})
 
-        print(predict_result)
+        from string import ascii_letters, digits
+        all_letters = digits + ascii_letters
+        print(all_letters[predict_result[0]])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
